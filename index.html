@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif Seni Rupa: Warna & Bentuk</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --secondary: #f5a623;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .progress-container {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            background-color: var(--primary);
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .slide {
+            display: none;
+        }
+
+        .slide.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .btn-option {
+            background-color: #f0f4f8;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-option:hover {
+            background-color: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .btn-option.selected {
+            background-color: #e0f2fe;
+            border-color: var(--primary);
+            color: #0369a1;
+            font-weight: 600;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-next {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-next:hover {
+            background-color: #357abd;
+        }
+
+        .btn-next:disabled {
+            background-color: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        /* Result View */
+        .result-view {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .result-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .score-box {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .score-details {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .stars-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .star {
+            font-size: 3rem;
+            color: #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+
+        .star.active {
+            color: var(--secondary);
+            animation: pop 0.4s ease forwards;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-restart {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-restart:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- Header dengan Progress Bar -->
+    <div class="header" id="quiz-header">
+        <div class="title">Kuis Seni Rupa: Warna & Bentuk</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="quiz-info">
+            <span id="question-type">Pilihan Ganda</span>
+            <span id="question-number">Soal 1 dari 20</span>
+        </div>
+    </div>
+
+    <!-- Tempat Konten Soal Dinamis -->
+    <div id="dynamic-slide" class="slide active">
+        <div class="question" id="question-text">Memuat soal...</div>
+        <div class="options-container" id="options-container"></div>
+        <div class="navigation">
+            <button class="btn-next" id="btn-next" disabled onclick="nextQuestion()">Lanjut</button>
+        </div>
+    </div>
+
+    <!-- Tampilan Akhir / Hasil Nilai -->
+    <div id="result-view" class="result-view" style="display: none;">
+        <div class="result-title">Selesai!</div>
+        <div class="score-box" id="final-score">0</div>
+        <div class="score-details" id="score-details">Kamu menjawab benar 0 dari 20 soal.</div>
+        
+        <!-- Reward Bintang -->
+        <div class="stars-container" id="stars-container">
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+            <span class="star">★</span>
+        </div>
+
+        <button class="btn-restart" onclick="restartQuiz()">Ulangi Kuis</button>
+    </div>
+</div>
+
+<script>
+    // Data Bank Soal (10 Pilihan Ganda & 10 Benar/Salah)
+    const quizData = [
+        // === 10 PILIHAN GANDA ===
+        {
+            type: "pg",
+            question: "Warna dasar yang tidak dibuat dari campuran warna lain disebut...",
+            options: ["Warna Sekunder", "Warna Primer", "Warna Geometris", "Warna Indah"],
+            answer: 1
+        },
+        {
+            type: "pg",
+            question: "Berikut ini yang termasuk ke dalam kelompok warna primer adalah...",
+            options: ["Merah, Kuning, Hijau", "Merah, Kuning, Biru", "Oranye, Hijau, Ungu", "Biru, Hijau, Ungu"],
+            answer: 1
+        },
+        {
+            type: "pg",
+            question: "Jika warna Kuning dicampur dengan warna Biru, maka akan menghasilkan warna sekunder yaitu...",
+            options: ["Hijau", "Oranye", "Ungu", "Merah Muda"],
+            answer: 0
+        },
+        {
+            type: "pg",
+            question: "Benda di sekitar kita yang memiliki warna alami kuning adalah...",
+            options: ["Apel dan Tomat", "Laut dan Langit", "Pisang dan Lemon", "Brokoli dan Daun"],
+            answer: 2
+        },
+        {
+            type: "pg",
+            question: "Campuran warna primer yang menghasilkan warna Oranye / Jingga adalah...",
+            options: ["Kuning + Biru", "Merah + Biru", "Merah + Kuning", "Hijau + Ungu"],
+            answer: 2
+        },
+        {
+            type: "pg",
+            question: "Bentuk yang beraturan, memiliki ukuran pasti, dan sesuai dengan alat ukur disebut bentuk...",
+            options: ["Nongeometris", "Primer", "Geometris", "Sekunder"],
+            answer: 2
+        },
+        {
+            type: "pg",
+            question: "Bentuk geometris yang memiliki 3 sisi saling berhadapan adalah...",
+            options: ["Lingkaran", "Persegi Panjang", "Segitiga", "Kotak"],
+            answer: 2
+        },
+        {
+            type: "pg",
+            question: "Setiap titik pada bentuk ini memiliki jarak yang sama dari titik pusatnya. Bentuk yang dimaksud adalah...",
+            options: ["Persegi", "Lingkaran", "Segitiga siku-siku", "Batu"],
+            answer: 1
+        },
+        {
+            type: "pg",
+            question: "Bentuk kotak yang memiliki 4 sisi dengan panjang yang sama persis dinamakan...",
+            options: ["Persegi Panjang", "Segitiga Sama Kaki", "Persegi", "Lingkaran"],
+            answer: 2
+        },
+        {
+            type: "pg",
+            question: "Manakah di bawah ini yang merupakan contoh benda berbentuk nongeometris?",
+            options: ["Uang koin, ban, jam", "Piza, bendera, es krim cone", "Bunga, daun, batu", "Keramik, lemari, buku"],
+            answer: 2
+        },
+        
+        // === 10 BENAR / SALAH ===
+        {
+            type: "bs",
+            question: "Warna sekunder adalah hasil pencampuran dari dua warna primer.",
+            options: ["Benar", "Salah"],
+            answer: 0
+        },
+        {
+type: "bs",
+question: "Campuran antara warna Merah dan warna Biru akan menghasilkan warna Hijau.",
+options: ["Benar", "Salah"],
+answer: 1
+},
+{
+type: "bs",
+question: "Laut dan langit merupakan contoh penampakan alam yang dominan berwarna biru.",
+options: ["Benar", "Salah"],
+answer: 0
+},
+{
+type: "bs",
+question: "Wortel dan labu merupakan contoh benda di sekitar kita yang berwarna ungu.",
+options: ["Benar", "Salah"],
+answer: 1
+},
+{
+type: "bs",
+question: "Bentuk nongeometris bersifat tidak beraturan dan tidak memiliki ukuran pasti.",
+options: ["Benar", "Salah"],
+answer: 0
+},
+{
+type: "bs",
+question: "Segitiga yang salah satu sudutnya berukuran 90 derajat disebut segitiga sama sisi.",
+options: ["Benar", "Salah"],
+answer: 1
+},
+{
+type: "bs",
+question: "Bentuk lingkaran memberikan kesan keharmonisan, keseimbangan, dan kesatuan.",
+options: ["Benar", "Salah"],
+answer: 0
+},
+{
+type: "bs",
+question: "Persegi panjang memiliki 4 sisi yang ukuran panjangnya sama semua.",
+options: ["Benar", "Salah"],
+answer: 1
+},
+{
+type: "bs",
+question: "Piza dan es krim cone merupakan contoh benda sehari-hari yang menyerupai bentuk segitiga.",
+options: ["Benar", "Salah"],
+answer: 0
+},
+{
+type: "bs",
+question: "Bentuk adalah hasil gabungan dari garis lurus dan garis lengkung.",
+options: ["Benar", "Salah"],
+answer: 0
+}
+];
+let currentQuestionIndex = 0;
+let score = 0;
+let selectedAnswer = null;
+const headerEl = document.getElementById('quiz-header');
+const dynamicSlideEl = document.getElementById('dynamic-slide');
+const resultViewEl = document.getElementById('result-view');
+const progressBarEl = document.getElementById('progress-bar');
+const questionTypeEl = document.getElementById('question-type');
+const questionNumberEl = document.getElementById('question-number');
+const questionTextEl = document.getElementById('question-text');
+const optionsContainerEl = document.getElementById('options-container');
+const btnNextEl = document.getElementById('btn-next');
+// Menampilkan soal saat ini
+function showQuestion() {
+selectedAnswer = null;
+btnNextEl.disabled = true;
+const currentQuestion = quizData[currentQuestionIndex];
+// Atur Progress Bar & Info
+const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+progressBarEl.style.width = ${progressPercentage}%;
+questionTypeEl.textContent = currentQuestion.type === "pg" ? "Pilihan Ganda" : "Benar / Salah";
+questionNumberEl.textContent = Soal ${currentQuestionIndex + 1} dari ${quizData.length};
+// Tampilkan Teks Soal
+questionTextEl.textContent = currentQuestion.question;
+// Kosongkan Opsi Lama & Render Opsi Baru
+optionsContainerEl.innerHTML = '';
+currentQuestion.options.forEach((option, index) => {
+const button = document.createElement('button');
+button.className = 'btn-option';
+button.textContent = option;
+button.onclick = () => selectOption(index);
+optionsContainerEl.appendChild(button);
+});
+}
+// Mengontrol pemilihan jawaban
+function selectOption(index) {
+selectedAnswer = index;
+// Efek Visual Tombol Terpilih
+const buttons = optionsContainerEl.getElementsByClassName('btn-option');
+for (let b of buttons) {
+b.classList.remove('selected');
+}
+buttons[index].classList.add('selected');
+// Aktifkan tombol lanjut
+btnNextEl.disabled = false;
+}
+// Melangkah ke soal berikutnya
+function nextQuestion() {
+// Cek jawaban benar
+if (selectedAnswer === quizData[currentQuestionIndex].answer) {
+score++;
+}
+currentQuestionIndex++;
+if (currentQuestionIndex < quizData.length) {
+showQuestion();
+} else {
+showResult();
+}
+}
+// Menampilkan halaman nilai dan reward bintang
+function showResult() {
+headerEl.style.display = 'none';
+dynamicSlideEl.style.display = 'none';
+resultViewEl.style.display = 'block';
+// Konversi skor ke skala 100
+const finalScore = Math.round((score / quizData.length) * 100);
+document.getElementById('final-score').textContent = finalScore;
+document.getElementById('score-details').textContent = Kamu menjawab benar ${score} dari ${quizData.length} soal.;
+// Atur Reward Jumlah Bintang berdasarkan Nilai
+let starsToEarn = 0;
+if (finalScore === 100) starsToEarn = 5;
+else if (finalScore >= 80) starsToEarn = 4;
+else if (finalScore >= 60) starsToEarn = 3;
+else if (finalScore >= 40) starsToEarn = 2;
+else if (finalScore > 0) starsToEarn = 1;
+const starElements = document.getElementById('stars-container').getElementsByClassName('star');
+// Reset Bintang Terlebih Dahulu
+for (let star of starElements) {
+star.classList.remove('active');
+}
+// Jalankan Efek Animasi Bintang Muncul Bergantian
+for (let i = 0; i < starsToEarn; i++) {
+setTimeout(() => {
+starElements[i].classList.add('active');
+}, i * 200);
+}
+}
+// Mengulang kuis dari awal
+function restartQuiz() {
+currentQuestionIndex = 0;
+score = 0;
+headerEl.style.display = 'block';
+dynamicSlideEl.style.display = 'block';
+resultViewEl.style.display = 'none';
+showQuestion();
+}
+// Memulai kuis saat halaman dimuat pertama kali
+window.onload = showQuestion;
